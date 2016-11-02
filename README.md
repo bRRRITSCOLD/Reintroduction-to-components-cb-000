@@ -8,14 +8,6 @@ Let's set the stage for a second: you're on Netflix and would like to re-watch y
 2. Describe how a user's interactions with a component trigger updates to data
 3. Describe how data gets back to components
 
-## Outline
-1. Show how components access store
-  - Passing them down as props
-2. Demonstrate that class components re-render when state is changed
-3. Show presentational (functional) components that do not interact directly with state (only have data passed down as props)
-4. .getState()
-5. Build out a simple YouTube search to demonstrate how state is passed around and components are re-rendered on state change
-
 
 Now that we know about where state is being held in our Redux application; how will our components be able to access and manipulate state? Our components cannot know about the store unless they are explicitly told about it. In React a component could only know about data from a parent component if it was passed in as a prop. Let's try doing exactly that: We'll instantiate our store in `index.js` then pass it down to the first rendered component `App.js`:
 
@@ -144,7 +136,7 @@ Brilliant! Now, every time `store.dispatch(action)` is called our `renderApp()` 
 
   ...
 
-  const render = () => {
+  const renderApp = () => {
     ReactDOM.render(<App store={store}/>, document.getElementById('container'))
   }
 
