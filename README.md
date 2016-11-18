@@ -8,10 +8,12 @@ Let's set the stage for a second: you're on Netflix and would like to re-watch y
 2. Describe how a user's interactions with a component trigger updates to data
 3. Describe how data gets back to components
 
+### State flow
 
-Now that we know about where state is being held in our Redux application; how will our components be able to access and manipulate state? Our components cannot know about the store unless they are explicitly told about it. In React a component could only know about data from a parent component if it was passed in as a prop. Let's try doing exactly that: We'll instantiate our store in `index.js` then pass it down to the first rendered component `App.js`:
+Now that we know about where state is being held in our Redux application; how will our components be able to access and manipulate state? Our components cannot know about the store unless they are explicitly told about it. In React a component could only know about data from a parent component if it was passed in as a prop. Let's try doing exactly that: We'll build out a band tracking App. We'll first instantiate our store in `index.js` then pass it down to the first rendered component `App.js`:
 
 *index.js*
+
 ```js
   import React from 'react';
   import ReactDOM from 'react-dom';
@@ -40,9 +42,12 @@ By now the above code should look pretty familiar. This is how we start the majo
   ReactDOM.render(<App store={store}/>, document.getElementById('container'))
 ```
 
+Why do we want to send down our `state` to components instead of having our components maintain their own `state`? By keeping the list of bands in one place, we can be sure that it always stays in sync accross many different components. This way we won't have to ever worry about grabbing the right data for the App - it will all be stored in one central location.
+
 To understand what our `createStore` function is doing let's take a quick look at our store:
 
 *store.js*
+
 ```js
   export const createStore = (reducer) => {
     let state;
@@ -67,7 +72,7 @@ To understand what our `createStore` function is doing let's take a quick look a
   }
 ```
 
-Instead of reviewing everything our store can do let's look at a top level overview of what `getState`, `dispatch`, and `subscribe` should do.
+Let's review what `getState`, `dispatch`, and `subscribe` should do:
 
 `getState` is a function that, when called, returns the state object of our application.
 
@@ -75,9 +80,9 @@ Instead of reviewing everything our store can do let's look at a top level overv
 
 `subscribe` is a function that is called when we want to add a new function to our listener array.
 
-Why do we want to add a function to our `listener`'s array? We typically add these functions so that when `dispatch` is called and it updates our state we can re-render our components. As an example let's refer back to our Netflix scenario. For this example Netflix has only two components: 1. SearchBar - which has an input field and updates `store.state` everytime a letter is entered to the input. 2. VideoSearch - which can access the user input entered by calling on `store.getState()` and filters through the Apps database of shows based on the user input to eventually display. Each letter that is typed into the SearchBar's input field fires an action that calls `store.dispatch(action)` to update the `state` object of the Netflix application. If the VideoSearch component (where the video thumbnails are displayed) could not re-render we would never see an updated list of Netflix shows. VideoSearch would only be able to show the initial list of videos stored in `state` when the App first loads. This is why Netflix needs their child component of searchbar to re-render every time `state` is changed.
+Why do we want to add a function to our `listener`'s array? We typically add these functions so that when `dispatch` is called and it updates our state we can re-render our components. As an example let's refer back to our Netflix scenario. For this example Netflix has only two components: 1. SearchBar - which has an input field and updates `store.state` everytime a letter is entered to the input. 2. VideoSearchList - which can access the user input entered by calling on `store.getState()` and filters through the Apps database of shows based on the user input to eventually display. Each letter that is typed into the SearchBar's input field fires an action that calls `store.dispatch(action)` to update the `state` object of the Netflix application. If the VideoSearchList component (where the video thumbnails are displayed) could not re-render we would never see an updated list of Netflix shows. VideoSearchList would only be able to show the initial list of videos stored in `state` when the App first loads. This is why Netflix needs their child component of searchbar to re-render every time `state` is changed.
 
-Ok, so now we know why our components should re-render when there's a `state` change, but how do we tell our components to do so? This is where our `listeners` come into play. This array of functions should hold the functions responsible for re-rendering our components. Knowing this let's think about how our components are rendered in the first place - with the `render()` method!
+Ok, so now we know why our components should re-render when there's a `state` change, but how do we tell our components to do so? This is where our `listeners` come into play. Note: This is for demonstration purposes only. We, normally, would not add our own `listeners`. This array of functions should hold the functions responsible for re-rendering our components. Knowing this let's think about how our components are rendered in the first place - with the `render()` method!
 
 Let's take a look at how a stock class based component uses the `render()` method:
 
@@ -133,19 +138,15 @@ We can see that our component `App`, which is imported from the components folde
 Brilliant! Now, every time `store.dispatch(action)` is called our `renderApp()` method will trigger, which will re-mount / re-render our `App` component. There is just one small issue with the above code. Though we're able to save our `renderApp()` function to the `listeners` array we are not yet calling on `renderApp()`. We will have to add one more line of code to accomplish this.
 
 ```js
-
   ...
-
   const renderApp = () => {
     ReactDOM.render(<App store={store}/>, document.getElementById('container'))
   }
 
   store.subscribe(render);
-  store.dispatch({});
+  renderApp();
 ```
 
-We need to call on `dispatch` initially when the application is loaded, which will call and mount our `App` component!
-
-As a quick sidenote: `store.dispatch(action)` cannot be called without an object as the arguement. The object may be empty, but when `dispatch` passes that passed in arguement to our `reducer` the reducer expects to receive an object. 
+Now, all we have to do is call on `renderApp` when the application is loaded, which will call and mount our `App` component!
 
 Hooray! We now know that our components will re-render whenever `store.dispatch(action)` is called. In the next section we will take a look at how user intereaction will need to call `store.dispatch(action)` to update the `state`.
